@@ -1,48 +1,52 @@
 import pandas as pd
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 
-# Sample data (replace with your actual data)
-data = {
-    "name": ["Raisin Bran", "Total Raisin Bran", "Special K", "Honey Nut Cheerios"],
-    "calories": [120, 140, 110, 110],
-    "protein": [3, 3, 6, 3],
-    "fiber": [14, 14, 0, 11.5],
-    "sugar": [12, 14, 0, 10.5],
-    "sodium": [210, 190, 230, 250],
-    "type": ["C", "C", "C", "C"]
-}
+def naive_bayes_classification(df, dependentVar):
+    # Separate features (X) and target variable (y)
+    X = df.loc[:, df.columns != dependentVar]
+    y = df[dependentVar].values
 
-# Convert data to pandas dataframe
-df = pd.DataFrame(data)
+    # One-hot encode categorical variables
+    X = pd.get_dummies(X)
 
-# Define features and target variable
-features = ["calories", "protein", "fiber", "sugar", "sodium"]
-target = "type"
+    # Standardize features
+    sc = StandardScaler()
+    X = sc.fit_transform(X)
 
-# Split data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2)
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=32)
 
-# Create a Multinomial Naive Bayes classifier
-clf = MultinomialNB()
+    # Train Gaussian Naive Bayes model
+    nbModel = GaussianNB()
+    nbModel.fit(X_train, y_train)
 
-# Train the classifier
-clf.fit(X_train, y_train)
+    # Predictions on the test set
+    y_pred = nbModel.predict(X_test)
 
-# Predict the type of a new cereal (replace with desired values)
-new_cereal = {"calories": 130, "protein": 4, "fiber": 8, "sugar": 8, "sodium": 180}
+    # Evaluation metrics
+    cm = confusion_matrix(y_test, y_pred)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='weighted')  # Use 'weighted' for multiclass
+    recall = recall_score(y_test, y_pred, average='weighted')  # Use 'weighted' for multiclass
+    f1 = f1_score(y_test, y_pred, average='weighted')  # Use 'weighted' for multiclass
 
-# Predict the type (assuming "C" is the healthy category)
-predicted_type = clf.predict([new_cereal])[0]
+    # Return results as a dictionary
+    results = {
+        'confusion_matrix': cm,
+        'accuracy_score': accuracy,
+        'precision_score': precision,
+        'recall_score': recall,
+        'f1_score': f1
+    }
 
-# Print the result (assuming "C" is the healthy category)
-if predicted_type == "C":
-    print("The new cereal is predicted to be a healthy option based on the given features.")
-else:
-    print("The new cereal is not predicted to be a healthy option based on the given features.")
+    return results
 
-# Note: This is a simplified example. A more comprehensive approach would involve:
-# - Using a larger dataset representing the entire cereal market.
-# - Considering additional features like vitamins, minerals, and ingredients.
-# - Evaluating the performance of the model using appropriate metrics.
-# - Consulting a healthcare professional for personalized dietary advice.
+# Example Usage
+df = pd.read_csv('./cereal.csv')
+dependentVar = 'protein'
+classification_results = naive_bayes_classification(df, dependentVar)
+print("Classification Results:")
+print(classification_results)
