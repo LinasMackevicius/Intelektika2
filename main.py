@@ -1,85 +1,48 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-import random
-from collections import deque
-import time
+import pandas as pd
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import train_test_split
 
+# Sample data (replace with your actual data)
+data = {
+    "name": ["Raisin Bran", "Total Raisin Bran", "Special K", "Honey Nut Cheerios"],
+    "calories": [120, 140, 110, 110],
+    "protein": [3, 3, 6, 3],
+    "fiber": [14, 14, 0, 11.5],
+    "sugar": [12, 14, 0, 10.5],
+    "sodium": [210, 190, 230, 250],
+    "type": ["C", "C", "C", "C"]
+}
 
+# Convert data to pandas dataframe
+df = pd.DataFrame(data)
 
-def show_graph(graph):
-    nx.draw(graph, with_labels=True)
-    plt.show()
+# Define features and target variable
+features = ["calories", "protein", "fiber", "sugar", "sodium"]
+target = "type"
 
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(df[features], df[target], test_size=0.2)
 
-def bfs(graph, start_node):
-    visited = set()
-    queue = deque([start_node])
+# Create a Multinomial Naive Bayes classifier
+clf = MultinomialNB()
 
-    while queue:
-        current_node = queue.popleft()
-        if current_node not in visited:
-            print(current_node)
-            visited.add(current_node)
-            queue.extend(neighbor for neighbor in graph.neighbors(current_node) if neighbor not in visited)
+# Train the classifier
+clf.fit(X_train, y_train)
 
-def dfs(graph, start_node, visited=None):
-    if visited is None:
-        visited = set()
+# Predict the type of a new cereal (replace with desired values)
+new_cereal = {"calories": 130, "protein": 4, "fiber": 8, "sugar": 8, "sodium": 180}
 
-    print(start_node)
-    visited.add(start_node)
+# Predict the type (assuming "C" is the healthy category)
+predicted_type = clf.predict([new_cereal])[0]
 
-    for neighbor in graph.neighbors(start_node):
-        if neighbor not in visited:
-            dfs(graph, neighbor, visited)
+# Print the result (assuming "C" is the healthy category)
+if predicted_type == "C":
+    print("The new cereal is predicted to be a healthy option based on the given features.")
+else:
+    print("The new cereal is not predicted to be a healthy option based on the given features.")
 
-def generate_random_graph(num_nodes):
-
-    G = nx.Graph()
-
-    # Add nodes using a loop
-    for i in range(num_nodes):
-        G.add_node(i)
-
-    # Create edges to add randomness while ensuring each node has at least one connection
-    for i in range(num_nodes):
-        # Choose a random node to connect to (excluding itself)
-        target_node = random.choice([node for node in G.nodes() if node != i])
-        G.add_edge(i, target_node)
-
-    return G
-
-my_graph1 = generate_random_graph(100);
-my_graph2 = generate_random_graph(200);
-my_graph3 = generate_random_graph(1000);
-
-#show_graph(my_graph1)
-#show_graph(my_graph2)
-#show_graph(my_graph3)
-
-
-#-----------BFS---------#
-
-start_time = time.time()
-bfs(my_graph3, 1) # Pasirinkti grafą
-end_time = time.time()
-
-
-# Calculate and print the elapsed time
-elapsed_time = end_time - start_time
-print(f"BFS execution time: {elapsed_time} seconds")
-
-#-----------DFS-----------#
-
-start_time = time.time()
-dfs(my_graph3, 1) # Pasirinkti grafą
-end_time = time.time()
-
-
-elapsed_time = end_time - start_time
-print(f"DFS execution time: {elapsed_time} seconds")
-
-
-
-
-
+# Note: This is a simplified example. A more comprehensive approach would involve:
+# - Using a larger dataset representing the entire cereal market.
+# - Considering additional features like vitamins, minerals, and ingredients.
+# - Evaluating the performance of the model using appropriate metrics.
+# - Consulting a healthcare professional for personalized dietary advice.
